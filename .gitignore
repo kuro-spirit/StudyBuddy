@@ -1,0 +1,33 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+env/
+venv/
+.rag-env/
+.rag-venv/
+*.egg-info/
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+*.swp
+
+# FAISS index files
+embeddings/*.faiss
+embeddings/*.pkl
+embeddings/*.json
+
+# Uploaded data
+data/*.pdf
+data/*.docx
+
+# Model and Ollama state (if any)
+ollama-models/
+
+# Environment config
+.env

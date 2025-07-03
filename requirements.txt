@@ -1,0 +1,11 @@
+# Core
+numpy>=1.24
+faiss-cpu>=1.7.4
+requests>=2.31.0
+
+# Document parsing
+PyPDF2>=3.0.1
+python-docx>=0.8.11
+
+# Embeddings
+sentence-transformers>=2.2.2
