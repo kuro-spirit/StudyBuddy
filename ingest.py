@@ -55,3 +55,11 @@ def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     chunks = chunk_text(text, max_words=chunk_size)
     print(f"[INFO] Split into {len(chunks)} chunks")
     return chunks
+
+if __name__ == "__main__":
+    file_path = "data/notes.pdf"
+    chunks = ingest(file_path)
+
+    print(f"\n[INFO] {len(chunks)} chunks generated:")
+    print("\n--- First Chunk ---\n")
+    print(chunks[0])
