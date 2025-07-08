@@ -28,6 +28,8 @@ data/*.docx
 
 # Model and Ollama state (if any)
 ollama-models/
+# Ignore all .gguf model files
+models/*.gguf
 
 # Environment config
 .env
