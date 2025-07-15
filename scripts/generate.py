@@ -31,7 +31,13 @@ def answer_question(query: str, k: int = 5) -> str:
     return response["choices"][0]["text"].strip()
 
 if __name__ == "__main__":
-    question = "What is a rank"
-    answer = answer_question(question)
-    print("\n--- Answer ---\n")
-    print(answer)
+    asking = True
+    while asking:
+        question = input("Write your question: ")
+        answer = answer_question(question)
+        print("\n--- Answer ---\n")
+        print(answer)
+        cont = input("Continue asking? input y for Yes and n for No: ")
+        if cont == "n":
+            asking = not asking
+        
