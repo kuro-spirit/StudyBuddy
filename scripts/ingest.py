@@ -2,6 +2,9 @@ import os
 from typing import List
 from PyPDF2 import PdfReader
 from docx import Document
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
 
 
 def extract_text_from_pdf(file_path: str) -> str:
@@ -42,7 +45,7 @@ def word_count_chunk(text: str, max_words: int = 200) -> List[str]:
     ]
     return chunks
 
-def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100):
+def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100) -> List[str]:
     """
     Chunking strategy that splits pdf into 300 word sizes with 100 word overlaps with
     adjacent chunks.
@@ -54,13 +57,38 @@ def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100):
         chunks.append(" ".join(chunk))
     return chunks
 
+def semantic_chunk(text: str, max_words: int = 200) -> List[str]:
+    """
+    Split text into semantic chunks by grouping sentences so each
+    chunk is based on max words, preserving sentence boundaries.
+    """
+    sentences = sent_tokenize(text)
+    chunks = []
+    current_chunk = []
+    current_length = 0
+
+    for sentence in sentences:
+        sentence_length = len(sentence.split())
+        if current_length + sentence_length > max_words and current_chunk:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [sentence]
+            current_length = sentence_length
+        else:
+            current_chunk.append(sentence)
+            current_length += sentence_length
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
+
 def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     """
     Full ingestion pipeline: load + chunk.
     Returns a list of text chunks.
     """
     print(f"[INFO] Loading file: {file_path}")
-    text = sliding_window_chunk(file_path)
+    text = semantic_chunk(file_path)
     print(f"[INFO] Document length: {len(text)} characters")
 
     chunks = word_count_chunk(text, max_words=chunk_size)
