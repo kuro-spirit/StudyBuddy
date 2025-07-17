@@ -30,7 +30,7 @@ def load_file(file_path: str) -> str:
         raise ValueError("Unsupported file format. Use PDF or DOCX.")
 
 
-def chunk_text(text: str, max_words: int = 200) -> List[str]:
+def word_count_chunk(text: str, max_words: int = 200) -> List[str]:
     """
     Splits the input text into chunks of `max_words` words each.
     Adjust `max_words` based on model input length limits.
@@ -42,6 +42,17 @@ def chunk_text(text: str, max_words: int = 200) -> List[str]:
     ]
     return chunks
 
+def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100):
+    """
+    Chunking strategy that splits pdf into 300 word sizes with 100 word overlaps with
+    adjacent chunks.
+    """
+    words = text.split()
+    chunks = []
+    for i in range(0, len(words), chunk_size - overlap):
+        chunk = words[i:i + chunk_size]
+        chunks.append(" ".join(chunk))
+    return chunks
 
 def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     """
@@ -49,10 +60,10 @@ def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     Returns a list of text chunks.
     """
     print(f"[INFO] Loading file: {file_path}")
-    text = load_file(file_path)
+    text = sliding_window_chunk(file_path)
     print(f"[INFO] Document length: {len(text)} characters")
 
-    chunks = chunk_text(text, max_words=chunk_size)
+    chunks = word_count_chunk(text, max_words=chunk_size)
     print(f"[INFO] Split into {len(chunks)} chunks")
     return chunks
 
