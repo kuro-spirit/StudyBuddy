@@ -38,13 +38,16 @@ def build_faiss_index(embeddings: np.ndarray):
     print(f"[INFO] FAISS index saved to {FAISS_INDEX_PATH}")
 
 
-def process_and_index(chunks: List[str]):
+
+def main(file_path: str):
+    chunks = ingest(file_path)
+    print(chunks[70])
     model = load_embedding_model()
     embeddings = embed_chunks(chunks, model)
     save_metadata(chunks)
     build_faiss_index(embeddings)
 
 if __name__ == "__main__":
+    # Change this path to your file
     file_path = "data/notes.pdf"
-    chunks = ingest(file_path)
-    process_and_index(chunks)
+    main(file_path)

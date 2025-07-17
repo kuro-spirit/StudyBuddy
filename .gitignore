@@ -12,6 +12,9 @@ venv/
 .rag-venv/
 *.egg-info/
 
+# Environment config
+.env
+
 # OS / editor files
 .DS_Store
 Thumbs.db
@@ -31,5 +34,5 @@ ollama-models/
 # Ignore all .gguf model files
 models/*.gguf
 
-# Environment config
-.env
+# nltk language files
+nltk_data/

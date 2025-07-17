@@ -13,7 +13,10 @@ llm = Llama(
 
 def build_prompt(query: str, context_chunks: list) -> str:
     context = "\n\n".join(context_chunks)
-    prompt = f"""You are a helpful study assistant.
+    prompt = f"""
+    You are a helpful study assistant. Only use the provided context below to answer the question.
+    If the answer cannot be found in the context, respond with "I cannot find any context in your
+    notes". It is okay to not find any answer in the context.
 
     Context:
     {context}

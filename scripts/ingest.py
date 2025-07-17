@@ -2,8 +2,10 @@ import os
 from typing import List
 from PyPDF2 import PdfReader
 from docx import Document
+import re
+
 import nltk
-nltk.download('punkt')
+nltk.data.path.append(os.path.join(os.getcwd(), "nltk_data"))
 from nltk.tokenize import sent_tokenize
 
 
@@ -32,19 +34,6 @@ def load_file(file_path: str) -> str:
     else:
         raise ValueError("Unsupported file format. Use PDF or DOCX.")
 
-
-def word_count_chunk(text: str, max_words: int = 200) -> List[str]:
-    """
-    Splits the input text into chunks of `max_words` words each.
-    Adjust `max_words` based on model input length limits.
-    """
-    words = text.split()
-    chunks = [
-        " ".join(words[i:i + max_words])
-        for i in range(0, len(words), max_words)
-    ]
-    return chunks
-
 def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100) -> List[str]:
     """
     Chunking strategy that splits pdf into 300 word sizes with 100 word overlaps with
@@ -62,17 +51,32 @@ def semantic_chunk(text: str, max_words: int = 200) -> List[str]:
     Split text into semantic chunks by grouping sentences so each
     chunk is based on max words, preserving sentence boundaries.
     """
+    text = re.sub(r'\s+', ' ', text.strip())
     sentences = sent_tokenize(text)
+
     chunks = []
     current_chunk = []
     current_length = 0
 
     for sentence in sentences:
-        sentence_length = len(sentence.split())
+        sentence_length = len(sentence.split()) 
+
+        # Handle long sentences
+        if sentence_length > max_words:
+            if current_chunk:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = []
+                current_length = 0
+            words = sentence.split()
+            for i in range(0, len(words), max_words):
+                chunks.append(" ".join(words[i:i+max_words]))
+            continue
+
         if current_length + sentence_length > max_words and current_chunk:
             chunks.append(" ".join(current_chunk))
-            current_chunk = [sentence]
-            current_length = sentence_length
+            overlap_sentences = current_chunk[-1:]
+            current_chunk = overlap_sentences + [sentence]
+            current_length = sum(len(s.split()) for s in current_chunk)
         else:
             current_chunk.append(sentence)
             current_length += sentence_length
@@ -88,10 +92,11 @@ def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     Returns a list of text chunks.
     """
     print(f"[INFO] Loading file: {file_path}")
-    text = semantic_chunk(file_path)
+    text = load_file(file_path)
+    print(f"[DEBUG] First 500 characters of raw text:\n{text[:500]}")
     print(f"[INFO] Document length: {len(text)} characters")
 
-    chunks = word_count_chunk(text, max_words=chunk_size)
+    chunks = semantic_chunk(text, max_words=chunk_size)
     print(f"[INFO] Split into {len(chunks)} chunks")
     return chunks
 
@@ -101,4 +106,4 @@ if __name__ == "__main__":
 
     print(f"\n[INFO] {len(chunks)} chunks generated:")
     print("\n--- First Chunk ---\n")
-    print(chunks[0])
+    print(chunks[70])
