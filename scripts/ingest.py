@@ -1,6 +1,6 @@
 import os
 from typing import List
-from PyPDF2 import PdfReader
+from pdfminer.high_level import extract_text
 from docx import Document
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -14,14 +14,14 @@ from nltk.tokenize import sent_tokenize, word_tokenize
 # Sentence Model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def extract_text_from_pdf(file_path: str) -> str:
-    """Extracts text from a PDF file."""
-    reader = PdfReader(file_path)
-    text = ""
-    for page in reader.pages:
-        if page.extract_text():
-            text += page.extract_text() + "\n"
-    return text.strip()
+# def extract_text_from_pdf(file_path: str) -> str:
+#     """Extracts text from a PDF file."""
+#     reader = PdfReader(file_path)
+#     text = ""
+#     for page in reader.pages:
+#         if page.extract_text():
+#             text += page.extract_text() + "\n"
+#     return text.strip()
 
 
 def extract_text_from_docx(file_path: str) -> str:
@@ -33,7 +33,7 @@ def extract_text_from_docx(file_path: str) -> str:
 def load_file(file_path: str) -> str:
     """Loads text from a PDF or DOCX file."""
     if file_path.lower().endswith(".pdf"):
-        return extract_text_from_pdf(file_path)
+        return extract_text(file_path)
     elif file_path.lower().endswith(".docx"):
         return extract_text_from_docx(file_path)
     else:
@@ -91,7 +91,7 @@ def semantic_chunk(text: str, max_words: int = 200) -> List[str]:
 
     return chunks
 
-def dynamic_semantic_chunk(text: str, min_words: int = 50, max_words: int = 200, sim_threshold: float = 0.7) -> List[str]:
+def dynamic_semantic_chunk(text: str, min_words: int = 150, max_words: int = 250, sim_threshold: float = 0.75) -> List[str]:
     """
     Split text into chunks using semantic similarity between sentences.
     A new chunk starts when similarity between sentences drops below a threshold or current chunk
@@ -157,5 +157,10 @@ if __name__ == "__main__":
     chunks = ingest(file_path)
 
     print(f"\n[INFO] {len(chunks)} chunks generated:")
+    
+    import random
+    for i in random.sample(range(len(chunks)), 5):
+        print(f"\n--- Chunk {i} ---\n{chunks[i]}\n")
+
     # print("\n--- First Chunk ---\n")
     # print(chunks[70])
