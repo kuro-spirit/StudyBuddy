@@ -2,12 +2,17 @@ import os
 from typing import List
 from PyPDF2 import PdfReader
 from docx import Document
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 import re
 
+# nltk imports
 import nltk
 nltk.data.path.append(os.path.join(os.getcwd(), "nltk_data"))
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
 
+# Sentence Model
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text_from_pdf(file_path: str) -> str:
     """Extracts text from a PDF file."""
@@ -86,6 +91,54 @@ def semantic_chunk(text: str, max_words: int = 200) -> List[str]:
 
     return chunks
 
+def dynamic_semantic_chunk(text: str, min_words: int = 50, max_words: int = 200, sim_threshold: float = 0.7) -> List[str]:
+    """
+    Split text into chunks using semantic similarity between sentences.
+    A new chunk starts when similarity between sentences drops below a threshold or current chunk
+    excess max_words.
+    """
+    text = re.sub(r'\s+', ' ', text.strip())
+    sentences = sent_tokenize(text)
+    embeddings = model.encode(sentences)
+
+    chunks = []
+    current_chunk = []
+    current_chunk_words = 0
+
+    for i, sentence in enumerate(sentences):
+        sent_words = word_tokenize(sentence)
+        sent_len = len(sent_words)
+
+        if not current_chunk:
+            current_chunk.append(sentence)
+            current_chunk_words += sent_len
+            continue
+
+        # Semantic similarity to current chunk so far
+        combined_text = " ".join(current_chunk)
+        combined_embedding = model.encode([combined_text])[0]
+        sim = cosine_similarity([embeddings[i]], [combined_embedding])[0][0]
+
+        # Compare sim to decide new chunk or continue
+        if sim >= sim_threshold or current_chunk_words < min_words:
+            current_chunk.append(sentence)
+            current_chunk_words += sent_len
+        else: # split the chunk
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [sentence]
+            current_chunk_words = sent_len
+        
+        # Force split if chunk is too long
+        if current_chunk_words >= max_words:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = []
+            current_chunk_words = 0
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    
+    return chunks
+
 def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     """
     Full ingestion pipeline: load + chunk.
@@ -93,10 +146,9 @@ def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     """
     print(f"[INFO] Loading file: {file_path}")
     text = load_file(file_path)
-    print(f"[DEBUG] First 500 characters of raw text:\n{text[:500]}")
     print(f"[INFO] Document length: {len(text)} characters")
 
-    chunks = semantic_chunk(text, max_words=chunk_size)
+    chunks = dynamic_semantic_chunk(text, max_words=chunk_size)
     print(f"[INFO] Split into {len(chunks)} chunks")
     return chunks
 
@@ -105,5 +157,5 @@ if __name__ == "__main__":
     chunks = ingest(file_path)
 
     print(f"\n[INFO] {len(chunks)} chunks generated:")
-    print("\n--- First Chunk ---\n")
-    print(chunks[70])
+    # print("\n--- First Chunk ---\n")
+    # print(chunks[70])
