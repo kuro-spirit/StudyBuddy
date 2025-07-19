@@ -22,9 +22,9 @@ def load_faiss_index():
 def embed_query(query: str, model: SentenceTransformer) -> np.ndarray:
     return np.array([model.encode(query)])
 
-def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20) -> List[str]:
+def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20, sim_threshold: float = 0.75) -> List[str]:
     """
-    Implemented using a re-ranking method where top 20 related chunks are retrieved,
+    Implemented using a re-ranking method where top 20 related chunks within threshold are retrieved,
     then refined and top 5 of the top 20 are returned to llama for context.
     """
     model = load_embedding_model()
@@ -33,6 +33,8 @@ def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20) -> List[str]
     index = load_faiss_index()
     D, I = index.search(query_vec, initial_k)
 
+    # Clean and fetch valid chunk candidates
+    retrieved = []
     all_chunks = load_metadata()
     retrieved_chunks = [all_chunks[i] for i in I[0]]
 
@@ -40,9 +42,14 @@ def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20) -> List[str]
     chunk_embeddings = model.encode(retrieved_chunks)
     query_embedding = model.encode(query)
     similarities = util.cos_sim(query_embedding, chunk_embeddings)[0]
-    reranked_indices = similarities.argsort(descending=True)[:top_k]
 
-    results = [retrieved_chunks[i] for i in reranked_indices]
+    # Apply threshold filter
+    filtered = [(chunk, sim.item()) for chunk, sim in zip(retrieved_chunks, similarities) if sim >= sim_threshold]
+
+    # Sort by similarity (descending)
+    filtered_sorted = sorted(filtered, key=lambda x: x[1], reverse=True)
+
+    results = [chunk for chunk, _ in filtered_sorted[:top_k]]
 
     return results
 

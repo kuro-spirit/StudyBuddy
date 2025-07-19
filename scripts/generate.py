@@ -14,13 +14,29 @@ llm = Llama(
 def build_prompt(query: str, context_chunks: list) -> str:
     context = "\n\n".join(context_chunks)
     prompt = f"""
-    You are a helpful study assistant. Only use the provided context below to answer the question.
+    You are an expert study assistant helping an university student understand course material. 
+    Only use the provided context below to answer the question.
+    If technical terms appear, briefly define them.
     If the answer cannot be found in the context, respond with "I cannot find any context in your
     notes". It is okay to not find any answer in the context.
 
     Context:
     {context}
 
+    Question: {query}
+    Answer:"""
+    prompt2 = f"""
+    You are an expert study assistant helping an university student understand course material.
+    You must only rely on the provided context below and must not halluciant or make up facts.
+    If technical terms appear, briefly define them.
+    If multiple facts are relevant, structure your answer logically with clear transitions.
+    If you are unsure, it is better to say "I cannot find any relevant information in the context."
+
+
+    Context:
+    {context}
+
+    Answer the following question using only the information provided above.
     Question: {query}
     Answer:"""
     return prompt
