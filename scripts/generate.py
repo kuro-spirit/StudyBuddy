@@ -25,9 +25,9 @@ def build_prompt(query: str, context_chunks: list) -> str:
     Answer:"""
     return prompt
 
-def answer_question(query: str, k: int = 5) -> str:
+def answer_question(query: str) -> str:
     # Retrieve relevant context
-    chunks = retrieve_top_k(query, k=k)
+    chunks = retrieve_top_k(query)
 
     # Build prompt
     prompt = build_prompt(query, chunks)

@@ -51,47 +51,7 @@ def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100) -
         chunks.append(" ".join(chunk))
     return chunks
 
-def semantic_chunk(text: str, max_words: int = 200) -> List[str]:
-    """
-    Split text into semantic chunks by grouping sentences so each
-    chunk is based on max words, preserving sentence boundaries.
-    """
-    text = re.sub(r'\s+', ' ', text.strip())
-    sentences = sent_tokenize(text)
-
-    chunks = []
-    current_chunk = []
-    current_length = 0
-
-    for sentence in sentences:
-        sentence_length = len(sentence.split()) 
-
-        # Handle long sentences
-        if sentence_length > max_words:
-            if current_chunk:
-                chunks.append(" ".join(current_chunk))
-                current_chunk = []
-                current_length = 0
-            words = sentence.split()
-            for i in range(0, len(words), max_words):
-                chunks.append(" ".join(words[i:i+max_words]))
-            continue
-
-        if current_length + sentence_length > max_words and current_chunk:
-            chunks.append(" ".join(current_chunk))
-            overlap_sentences = current_chunk[-1:]
-            current_chunk = overlap_sentences + [sentence]
-            current_length = sum(len(s.split()) for s in current_chunk)
-        else:
-            current_chunk.append(sentence)
-            current_length += sentence_length
-
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
-
-    return chunks
-
-def dynamic_semantic_chunk(text: str, min_words: int = 150, max_words: int = 250, sim_threshold: float = 0.75) -> List[str]:
+def dynamic_semantic_chunk(text: str, min_words: int = 150, max_words: int = 350, sim_threshold: float = 0.75, overlap: int = 1) -> List[str]:
     """
     Split text into chunks using semantic similarity between sentences.
     A new chunk starts when similarity between sentences drops below a threshold or current chunk
@@ -125,8 +85,10 @@ def dynamic_semantic_chunk(text: str, min_words: int = 150, max_words: int = 250
             current_chunk_words += sent_len
         else: # split the chunk
             chunks.append(" ".join(current_chunk))
-            current_chunk = [sentence]
-            current_chunk_words = sent_len
+            # overlap last N sentences
+            overlap_sentence = current_chunk[-overlap:] if overlap > 0 else []
+            current_chunk = overlap_sentence + [sentence]
+            current_chunk_words = sum(len(word_tokenize(s)) for s in current_chunk)
         
         # Force split if chunk is too long
         if current_chunk_words >= max_words:
@@ -139,7 +101,7 @@ def dynamic_semantic_chunk(text: str, min_words: int = 150, max_words: int = 250
     
     return chunks
 
-def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
+def ingest(file_path: str) -> List[str]:
     """
     Full ingestion pipeline: load + chunk.
     Returns a list of text chunks.
@@ -148,7 +110,7 @@ def ingest(file_path: str, chunk_size: int = 200) -> List[str]:
     text = load_file(file_path)
     print(f"[INFO] Document length: {len(text)} characters")
 
-    chunks = dynamic_semantic_chunk(text, max_words=chunk_size)
+    chunks = dynamic_semantic_chunk(text)
     print(f"[INFO] Split into {len(chunks)} chunks")
     return chunks
 
