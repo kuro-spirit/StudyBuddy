@@ -25,22 +25,17 @@ def build_prompt(query: str, context_chunks: list) -> str:
 
     Question: {query}
     Answer:"""
-    prompt2 = f"""
-    You are an expert study assistant helping an university student understand course material.
-    You must only rely on the provided context below and must not halluciant or make up facts.
-    If technical terms appear, briefly define them.
-    If multiple facts are relevant, structure your answer logically with clear transitions.
-    If you are unsure, it is better to say "I cannot find any relevant information in the context."
-
+    prompt2 = f"""<s>[INST] 
+    You are a helpful study assistant. Use only the context provided below to answer the user's question.
+    If the answer is not in the context, say "I cannot find any context in your notes."
 
     Context:
     {context}
 
-    Answer the following question using only the information provided above.
     Question: {query}
-    Answer:"""
-    print(f"\n[DEBUG] Prompt Sent to LLaMA:\n{prompt[:1000]}...\n")
-    return prompt
+    [/INST]"""
+    # print(f"\n[DEBUG] Prompt Sent to LLaMA:\n{prompt[:1000]}...\n")
+    return prompt2
 
 def answer_question(query: str) -> str:
     # Retrieve relevant context
@@ -50,9 +45,13 @@ def answer_question(query: str) -> str:
     prompt = build_prompt(query, chunks)
 
     # Generate response
-    response = llm(prompt, max_tokens=512, stop=["\n", "User:"])
+    response = llm(prompt, max_tokens=512, stop=["\n"])
     print("\n[DEBUG] Raw LLaMA response:\n", response)
-    return response["choices"][0]["text"].strip()
+
+    # clean response
+    answer = response["choices"][0].get("text", "").strip()
+    print("\n[DEBUG] Cleaned response:\n", answer)
+    return answer
 
 if __name__ == "__main__":
     asking = True
