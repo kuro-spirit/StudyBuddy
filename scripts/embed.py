@@ -6,6 +6,9 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 from ingest import ingest
 
+import os
+print("[DEBUG] Current working directory:", os.getcwd())
+
 # You can switch this model later if needed
 EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 CHUNK_METADATA_PATH = "embeddings/chunk_metadata.json"
@@ -37,14 +40,15 @@ def build_faiss_index(embeddings: np.ndarray):
     faiss.write_index(index, FAISS_INDEX_PATH)
     print(f"[INFO] FAISS index saved to {FAISS_INDEX_PATH}")
 
-def main(file_path: str):
+def embed(file_path: str):
     chunks = ingest(file_path)
-    print(chunks[70])
+    # print(chunks[70])
     model = load_embedding_model()
     embeddings = embed_chunks(chunks, model)
     save_metadata(chunks)
     build_faiss_index(embeddings)
+    return chunks
 
 if __name__ == "__main__":
     file_path = "data/notes.pdf"
-    main(file_path)
+    embed(file_path)

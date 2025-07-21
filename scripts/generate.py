@@ -39,6 +39,7 @@ def build_prompt(query: str, context_chunks: list) -> str:
     Answer the following question using only the information provided above.
     Question: {query}
     Answer:"""
+    print(f"\n[DEBUG] Prompt Sent to LLaMA:\n{prompt[:1000]}...\n")
     return prompt
 
 def answer_question(query: str) -> str:
@@ -50,6 +51,7 @@ def answer_question(query: str) -> str:
 
     # Generate response
     response = llm(prompt, max_tokens=512, stop=["\n", "User:"])
+    print("\n[DEBUG] Raw LLaMA response:\n", response)
     return response["choices"][0]["text"].strip()
 
 if __name__ == "__main__":

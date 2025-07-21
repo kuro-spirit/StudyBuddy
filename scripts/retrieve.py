@@ -1,3 +1,4 @@
+import os
 import json
 import numpy as np
 import faiss
@@ -22,11 +23,15 @@ def load_faiss_index():
 def embed_query(query: str, model: SentenceTransformer) -> np.ndarray:
     return np.array([model.encode(query)])
 
-def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20, sim_threshold: float = 0.75) -> List[str]:
+def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20, sim_threshold: float = 0.4) -> List[str]:
     """
     Implemented using a re-ranking method where top 20 related chunks within threshold are retrieved,
     then refined and top 5 of the top 20 are returned to llama for context.
     """
+    print(f"\n[DEBUG] Running retrieve_top_k()")
+    print(f"[DEBUG] Query: {query}")
+    print(f"[DEBUG] CHUNK_METADATA_PATH exists? {os.path.exists(CHUNK_METADATA_PATH)}")
+    print(f"[DEBUG] FAISS_INDEX_PATH exists? {os.path.exists(FAISS_INDEX_PATH)}")
     model = load_embedding_model()
     query_vec = embed_query(query, model)
 
@@ -36,7 +41,10 @@ def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20, sim_threshol
     # Clean and fetch valid chunk candidates
     retrieved = []
     all_chunks = load_metadata()
+    print(f"\n[DEBUG] Top {initial_k} retrieved chunks:")
     retrieved_chunks = [all_chunks[i] for i in I[0]]
+
+    print(f"[DEBUG] Retrieved {len(retrieved_chunks)} chunks from FAISS")
 
     # Re-rank using cosine similarity
     chunk_embeddings = model.encode(retrieved_chunks)
@@ -46,10 +54,15 @@ def retrieve_top_k(query: str, top_k: int = 5, initial_k: int = 20, sim_threshol
     # Apply threshold filter
     filtered = [(chunk, sim.item()) for chunk, sim in zip(retrieved_chunks, similarities) if sim >= sim_threshold]
 
+    if not filtered:
+        print("[DEBUG] No chunks passed similarity threshold. Falling back to top-k FAISS results.")
+        return retrieved_chunks[:top_k]
     # Sort by similarity (descending)
     filtered_sorted = sorted(filtered, key=lambda x: x[1], reverse=True)
 
     results = [chunk for chunk, _ in filtered_sorted[:top_k]]
+
+    print(f"[DEBUG] Final results returned: {len(results)} chunks")
 
     return results
 
