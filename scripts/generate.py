@@ -25,33 +25,56 @@ def build_prompt(query: str, context_chunks: list) -> str:
 
     Question: {query}
     Answer:"""
-    prompt2 = f"""<s>[INST] 
+    prompt2 = f"""
     You are a helpful study assistant. Use only the context provided below to answer the user's question.
-    If the answer is not in the context, say "I cannot find any context in your notes."
+    # If the answer is not in the context, say "I cannot find any context in your notes."
 
     Context:
     {context}
 
     Question: {query}
-    [/INST]"""
-    # print(f"\n[DEBUG] Prompt Sent to LLaMA:\n{prompt[:1000]}...\n")
+    """
+    print(f"\n[DEBUG] Prompt Sent to LLaMA:\n{prompt2[:1000]}...\n")
     return prompt2
 
 def answer_question(query: str) -> str:
+    # Refining user query for better accuracy
+    refined_query = refine_query(query)
+    print(f"[DEBUG] Refined query: {refined_query}")
+
     # Retrieve relevant context
-    chunks = retrieve_top_k(query)
+    chunks = retrieve_top_k(refined_query)
+
+    if not chunks:
+        chunks = "No relevant context was found."
 
     # Build prompt
-    prompt = build_prompt(query, chunks)
+    prompt = build_prompt(query, chunks) + "\n\n"
 
     # Generate response
-    response = llm(prompt, max_tokens=512, stop=["\n"])
+    response = llm(prompt, max_tokens=512)
     print("\n[DEBUG] Raw LLaMA response:\n", response)
 
     # clean response
     answer = response["choices"][0].get("text", "").strip()
     print("\n[DEBUG] Cleaned response:\n", answer)
     return answer
+
+def refine_query(query: str) -> str:
+    """
+    Takes in user query and refines it so it is inserted into the vector db with 
+    more accuracy
+    """
+    prompt = f"""
+    You are a helpful assistant. Rewrite the following question to make it clearer,
+    more specific and optimized for retrieving relevant information from acadamic notes.
+    Do not answer the question. Only return the imrpoved version.
+
+    Original question: {query}
+    Refined question:
+    """
+    response = llm(prompt, max_tokens=64)
+    return response["choices"][0]["text"].strip()
 
 if __name__ == "__main__":
     asking = True

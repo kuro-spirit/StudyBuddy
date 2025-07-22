@@ -50,5 +50,5 @@ def embed(file_path: str):
     return chunks
 
 if __name__ == "__main__":
-    file_path = "data/notes.pdf"
+    file_path = "data/ComputationalLinearAlgebra.pdf"
     embed(file_path)
