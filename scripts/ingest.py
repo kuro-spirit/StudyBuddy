@@ -1,7 +1,6 @@
 import os
 from typing import List
 from pdfminer.high_level import extract_text
-from docx import Document
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
@@ -24,20 +23,12 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 #     return text.strip()
 
 
-def extract_text_from_docx(file_path: str) -> str:
-    """Extracts text from a Word DOCX file."""
-    doc = Document(file_path)
-    return "\n".join([para.text for para in doc.paragraphs]).strip()
-
-
 def load_file(file_path: str) -> str:
     """Loads text from a PDF or DOCX file."""
     if file_path.lower().endswith(".pdf"):
         return extract_text(file_path)
-    elif file_path.lower().endswith(".docx"):
-        return extract_text_from_docx(file_path)
     else:
-        raise ValueError("Unsupported file format. Use PDF or DOCX.")
+        raise ValueError("Unsupported file format. Use PDF.")
 
 def sliding_window_chunk(text: str, chunk_size: int = 300, overlap: int = 100) -> List[str]:
     """

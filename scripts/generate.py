@@ -3,12 +3,14 @@ from retrieve import retrieve_top_k
 import os
 from datetime import datetime
 
+os.environ["LLAMA_CUBLAS"] = "1"
+
 llm = Llama(
-    model_path="models/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf", 
-    n_gpu_layers=-1, # Gpu layers set to 32 for partial offload
-    n_ctx=8192,   # Increase context window to avoid overflow
-    n_threads=os.cpu_count(),  # Adjust to your CPU core count
-    verbose=False
+    model_path="models/Meta-Llama-3-8B-Instruct.Q4_K_M.gguf",
+    n_gpu_layers=24,
+    n_ctx=8192,
+    n_threads=os.cpu_count(),
+    verbose=True
 )
 
 def build_prompt(query: str, context_chunks: list) -> str:
