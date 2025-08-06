@@ -9,8 +9,8 @@ Retrieval-Augmented Generation (RAG) using LLaMA
 Local model execution (via llama.cpp)
 
 ## Directory Structure
-.
-├── scripts/
+.  
+├── scripts/  
 │   ├── chunker.py           PDF loading and chunking logic  
 │   ├── embedder.py          Embedding and vector store management  
 │   ├── retriever.py         Search logic for context retrieval  
