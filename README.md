@@ -29,11 +29,11 @@ python -m venv venv
 pip install -r requirements.txt
 
 ## Usage
-# Step 1: Run ui file
+### Step 1: Run ui file
 python ui.py
-# Step 2: Upload study resource of pdf type
+### Step 2: Upload study resource of pdf type
 Click upload button and select pdf you want to study
-# Step 3: Ask a question
+### Step 3: Ask a question
 Input question into chat box and press ask for llama to process question
 
 ## Architecture Overview
