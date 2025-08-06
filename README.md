@@ -11,7 +11,7 @@ Local model execution (via llama.cpp)
 ## Directory Structure
 .
 ├── scripts/
-│   ├── chunker.py           PDF loading and chunking logic
+│   ├── chunker.py           PDF loading and chunking logic \n
 │   ├── embedder.py          Embedding and vector store management
 │   ├── retriever.py         Search logic for context retrieval
 │   ├── generate.py          Query to LLaMA based on retrieved context
