@@ -22,7 +22,7 @@ Local model execution (via llama.cpp)
 └── requirements.txt
 
 ## Installation
-git clone https://github.com/yourname/studybuddy.git
+git clone https://github.com/kuro-spirit/StudyBuddy.git
 cd studybuddy
 python -m venv venv
 .\venv\Scripts\activate 
